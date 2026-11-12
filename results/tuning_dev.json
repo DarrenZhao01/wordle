@@ -1,0 +1,493 @@
+{
+  "split": "dev",
+  "num_dev_targets": 463,
+  "allow_non_answers": true,
+  "best_epsilon": 0.01,
+  "best_summary": {
+    "split": "dev",
+    "num_games": 463,
+    "agent_name": "entropy",
+    "agent_config": {
+      "agent_type": "entropy",
+      "epsilon": 0.01,
+      "allow_non_answers": true,
+      "final_turn_rule": "restrict_to_C_idx_highest_entropy_alphabetical",
+      "use_opening_cache": true,
+      "tie_tolerance": 1e-12,
+      "tie_break": "in_C_idx_then_alphabetical"
+    },
+    "opening_words_used": [
+      "raise"
+    ],
+    "avg_guesses_all_penalized7": 3.464363,
+    "avg_guesses_won_only": 3.464363,
+    "win_rate_pct": 100.0,
+    "wins": 463,
+    "loss_count": 0,
+    "max_win_turns": 5,
+    "guess_distribution_counts": {
+      "1": 0,
+      "2": 11,
+      "3": 243,
+      "4": 192,
+      "5": 17,
+      "6": 0,
+      "loss_7": 0
+    },
+    "guess_distribution_pct": {
+      "1": 0.0,
+      "2": 2.3758,
+      "3": 52.4838,
+      "4": 41.4687,
+      "5": 3.6717,
+      "6": 0.0,
+      "loss_7": 0.0
+    },
+    "candidate_trajectory": {
+      "carried_forward_mean": {
+        "1": 60.8467,
+        "2": 3.5961,
+        "3": 1.0886,
+        "4": 1.0022,
+        "5": 1.0,
+        "6": 1.0
+      },
+      "unsolved_after_turn_mean": {
+        "1": 60.8467,
+        "2": 3.6593,
+        "3": 1.1962,
+        "4": 1.0588,
+        "5": null,
+        "6": null
+      },
+      "unsolved_after_turn_count": {
+        "1": 463,
+        "2": 452,
+        "3": 209,
+        "4": 17,
+        "5": 0,
+        "6": 0
+      }
+    },
+    "runtime": {
+      "total_turns": 1604,
+      "total_online_select_ms": 6756.745,
+      "mean_select_ms_per_guess": 4.2124,
+      "mean_select_ms_turn1": 0.1273,
+      "mean_select_ms_turns2_to_6": 5.8701,
+      "opening_cache_used_turn1": true,
+      "cache_loaded_from_disk": true,
+      "cache_load_or_build_ms": 12.717
+    },
+    "epsilon": 0.01
+  },
+  "grid_results": [
+    {
+      "split": "dev",
+      "num_games": 463,
+      "agent_name": "entropy",
+      "agent_config": {
+        "agent_type": "entropy",
+        "epsilon": 0.0,
+        "allow_non_answers": true,
+        "final_turn_rule": "restrict_to_C_idx_highest_entropy_alphabetical",
+        "use_opening_cache": true,
+        "tie_tolerance": 1e-12,
+        "tie_break": "in_C_idx_then_alphabetical"
+      },
+      "opening_words_used": [
+        "soare"
+      ],
+      "avg_guesses_all_penalized7": 3.492441,
+      "avg_guesses_won_only": 3.492441,
+      "win_rate_pct": 100.0,
+      "wins": 463,
+      "loss_count": 0,
+      "max_win_turns": 5,
+      "guess_distribution_counts": {
+        "1": 0,
+        "2": 6,
+        "3": 238,
+        "4": 204,
+        "5": 15,
+        "6": 0,
+        "loss_7": 0
+      },
+      "guess_distribution_pct": {
+        "1": 0.0,
+        "2": 1.2959,
+        "3": 51.4039,
+        "4": 44.0605,
+        "5": 3.2397,
+        "6": 0.0,
+        "loss_7": 0.0
+      },
+      "candidate_trajectory": {
+        "carried_forward_mean": {
+          "1": 62.3996,
+          "2": 3.5853,
+          "3": 1.0605,
+          "4": 1.0,
+          "5": 1.0,
+          "6": 1.0
+        },
+        "unsolved_after_turn_mean": {
+          "1": 62.3996,
+          "2": 3.6193,
+          "3": 1.1279,
+          "4": 1.0,
+          "5": null,
+          "6": null
+        },
+        "unsolved_after_turn_count": {
+          "1": 463,
+          "2": 457,
+          "3": 219,
+          "4": 15,
+          "5": 0,
+          "6": 0
+        }
+      },
+      "runtime": {
+        "total_turns": 1617,
+        "total_online_select_ms": 6418.617,
+        "mean_select_ms_per_guess": 3.9695,
+        "mean_select_ms_turn1": 0.1363,
+        "mean_select_ms_turns2_to_6": 5.5074,
+        "opening_cache_used_turn1": true,
+        "cache_loaded_from_disk": true,
+        "cache_load_or_build_ms": 12.717
+      },
+      "epsilon": 0.0
+    },
+    {
+      "split": "dev",
+      "num_games": 463,
+      "agent_name": "entropy",
+      "agent_config": {
+        "agent_type": "entropy",
+        "epsilon": 0.01,
+        "allow_non_answers": true,
+        "final_turn_rule": "restrict_to_C_idx_highest_entropy_alphabetical",
+        "use_opening_cache": true,
+        "tie_tolerance": 1e-12,
+        "tie_break": "in_C_idx_then_alphabetical"
+      },
+      "opening_words_used": [
+        "raise"
+      ],
+      "avg_guesses_all_penalized7": 3.464363,
+      "avg_guesses_won_only": 3.464363,
+      "win_rate_pct": 100.0,
+      "wins": 463,
+      "loss_count": 0,
+      "max_win_turns": 5,
+      "guess_distribution_counts": {
+        "1": 0,
+        "2": 11,
+        "3": 243,
+        "4": 192,
+        "5": 17,
+        "6": 0,
+        "loss_7": 0
+      },
+      "guess_distribution_pct": {
+        "1": 0.0,
+        "2": 2.3758,
+        "3": 52.4838,
+        "4": 41.4687,
+        "5": 3.6717,
+        "6": 0.0,
+        "loss_7": 0.0
+      },
+      "candidate_trajectory": {
+        "carried_forward_mean": {
+          "1": 60.8467,
+          "2": 3.5961,
+          "3": 1.0886,
+          "4": 1.0022,
+          "5": 1.0,
+          "6": 1.0
+        },
+        "unsolved_after_turn_mean": {
+          "1": 60.8467,
+          "2": 3.6593,
+          "3": 1.1962,
+          "4": 1.0588,
+          "5": null,
+          "6": null
+        },
+        "unsolved_after_turn_count": {
+          "1": 463,
+          "2": 452,
+          "3": 209,
+          "4": 17,
+          "5": 0,
+          "6": 0
+        }
+      },
+      "runtime": {
+        "total_turns": 1604,
+        "total_online_select_ms": 6756.745,
+        "mean_select_ms_per_guess": 4.2124,
+        "mean_select_ms_turn1": 0.1273,
+        "mean_select_ms_turns2_to_6": 5.8701,
+        "opening_cache_used_turn1": true,
+        "cache_loaded_from_disk": true,
+        "cache_load_or_build_ms": 12.717
+      },
+      "epsilon": 0.01
+    },
+    {
+      "split": "dev",
+      "num_games": 463,
+      "agent_name": "entropy",
+      "agent_config": {
+        "agent_type": "entropy",
+        "epsilon": 0.05,
+        "allow_non_answers": true,
+        "final_turn_rule": "restrict_to_C_idx_highest_entropy_alphabetical",
+        "use_opening_cache": true,
+        "tie_tolerance": 1e-12,
+        "tie_break": "in_C_idx_then_alphabetical"
+      },
+      "opening_words_used": [
+        "raise"
+      ],
+      "avg_guesses_all_penalized7": 3.464363,
+      "avg_guesses_won_only": 3.464363,
+      "win_rate_pct": 100.0,
+      "wins": 463,
+      "loss_count": 0,
+      "max_win_turns": 5,
+      "guess_distribution_counts": {
+        "1": 0,
+        "2": 11,
+        "3": 243,
+        "4": 192,
+        "5": 17,
+        "6": 0,
+        "loss_7": 0
+      },
+      "guess_distribution_pct": {
+        "1": 0.0,
+        "2": 2.3758,
+        "3": 52.4838,
+        "4": 41.4687,
+        "5": 3.6717,
+        "6": 0.0,
+        "loss_7": 0.0
+      },
+      "candidate_trajectory": {
+        "carried_forward_mean": {
+          "1": 60.8467,
+          "2": 3.5961,
+          "3": 1.0886,
+          "4": 1.0022,
+          "5": 1.0,
+          "6": 1.0
+        },
+        "unsolved_after_turn_mean": {
+          "1": 60.8467,
+          "2": 3.6593,
+          "3": 1.1962,
+          "4": 1.0588,
+          "5": null,
+          "6": null
+        },
+        "unsolved_after_turn_count": {
+          "1": 463,
+          "2": 452,
+          "3": 209,
+          "4": 17,
+          "5": 0,
+          "6": 0
+        }
+      },
+      "runtime": {
+        "total_turns": 1604,
+        "total_online_select_ms": 6933.574,
+        "mean_select_ms_per_guess": 4.3227,
+        "mean_select_ms_turn1": 0.1332,
+        "mean_select_ms_turns2_to_6": 6.0227,
+        "opening_cache_used_turn1": true,
+        "cache_loaded_from_disk": true,
+        "cache_load_or_build_ms": 12.717
+      },
+      "epsilon": 0.05
+    },
+    {
+      "split": "dev",
+      "num_games": 463,
+      "agent_name": "entropy",
+      "agent_config": {
+        "agent_type": "entropy",
+        "epsilon": 0.1,
+        "allow_non_answers": true,
+        "final_turn_rule": "restrict_to_C_idx_highest_entropy_alphabetical",
+        "use_opening_cache": true,
+        "tie_tolerance": 1e-12,
+        "tie_break": "in_C_idx_then_alphabetical"
+      },
+      "opening_words_used": [
+        "raise"
+      ],
+      "avg_guesses_all_penalized7": 3.464363,
+      "avg_guesses_won_only": 3.464363,
+      "win_rate_pct": 100.0,
+      "wins": 463,
+      "loss_count": 0,
+      "max_win_turns": 5,
+      "guess_distribution_counts": {
+        "1": 0,
+        "2": 12,
+        "3": 241,
+        "4": 193,
+        "5": 17,
+        "6": 0,
+        "loss_7": 0
+      },
+      "guess_distribution_pct": {
+        "1": 0.0,
+        "2": 2.5918,
+        "3": 52.0518,
+        "4": 41.6847,
+        "5": 3.6717,
+        "6": 0.0,
+        "loss_7": 0.0
+      },
+      "candidate_trajectory": {
+        "carried_forward_mean": {
+          "1": 60.8467,
+          "2": 3.5875,
+          "3": 1.0907,
+          "4": 1.0022,
+          "5": 1.0,
+          "6": 1.0
+        },
+        "unsolved_after_turn_mean": {
+          "1": 60.8467,
+          "2": 3.6563,
+          "3": 1.2,
+          "4": 1.0588,
+          "5": null,
+          "6": null
+        },
+        "unsolved_after_turn_count": {
+          "1": 463,
+          "2": 451,
+          "3": 210,
+          "4": 17,
+          "5": 0,
+          "6": 0
+        }
+      },
+      "runtime": {
+        "total_turns": 1604,
+        "total_online_select_ms": 6390.261,
+        "mean_select_ms_per_guess": 3.984,
+        "mean_select_ms_turn1": 0.1223,
+        "mean_select_ms_turns2_to_6": 5.5509,
+        "opening_cache_used_turn1": true,
+        "cache_loaded_from_disk": true,
+        "cache_load_or_build_ms": 12.717
+      },
+      "epsilon": 0.1
+    },
+    {
+      "split": "dev",
+      "num_games": 463,
+      "agent_name": "entropy",
+      "agent_config": {
+        "agent_type": "entropy",
+        "epsilon": 0.2,
+        "allow_non_answers": true,
+        "final_turn_rule": "restrict_to_C_idx_highest_entropy_alphabetical",
+        "use_opening_cache": true,
+        "tie_tolerance": 1e-12,
+        "tie_break": "in_C_idx_then_alphabetical"
+      },
+      "opening_words_used": [
+        "raise"
+      ],
+      "avg_guesses_all_penalized7": 3.477322,
+      "avg_guesses_won_only": 3.477322,
+      "win_rate_pct": 100.0,
+      "wins": 463,
+      "loss_count": 0,
+      "max_win_turns": 5,
+      "guess_distribution_counts": {
+        "1": 0,
+        "2": 15,
+        "3": 230,
+        "4": 200,
+        "5": 18,
+        "6": 0,
+        "loss_7": 0
+      },
+      "guess_distribution_pct": {
+        "1": 0.0,
+        "2": 3.2397,
+        "3": 49.676,
+        "4": 43.1965,
+        "5": 3.8877,
+        "6": 0.0,
+        "loss_7": 0.0
+      },
+      "candidate_trajectory": {
+        "carried_forward_mean": {
+          "1": 60.8467,
+          "2": 3.6544,
+          "3": 1.0929,
+          "4": 1.0022,
+          "5": 1.0,
+          "6": 1.0
+        },
+        "unsolved_after_turn_mean": {
+          "1": 60.8467,
+          "2": 3.7433,
+          "3": 1.1972,
+          "4": 1.0556,
+          "5": null,
+          "6": null
+        },
+        "unsolved_after_turn_count": {
+          "1": 463,
+          "2": 448,
+          "3": 218,
+          "4": 18,
+          "5": 0,
+          "6": 0
+        }
+      },
+      "runtime": {
+        "total_turns": 1610,
+        "total_online_select_ms": 6047.862,
+        "mean_select_ms_per_guess": 3.7564,
+        "mean_select_ms_turn1": 0.1182,
+        "mean_select_ms_turns2_to_6": 5.2251,
+        "opening_cache_used_turn1": true,
+        "cache_loaded_from_disk": true,
+        "cache_load_or_build_ms": 12.717
+      },
+      "epsilon": 0.2
+    }
+  ],
+  "dictionary_metadata": {
+    "num_answers": 2315,
+    "num_guesses": 12972,
+    "answers_file_sha256": "5209b35f823f8b80f0404f863bd80df06d6a966c6eb1016d69f38badc6eed5d0",
+    "allowed_file_sha256": "99be2e38dadf3e26952af7cb4d963f65b632d5de91aa99e5ce308e4dc9617b65",
+    "answers_list_sha256": "5209b35f823f8b80f0404f863bd80df06d6a966c6eb1016d69f38badc6eed5d0",
+    "guesses_list_sha256": "498f38211e3bafbfd6cc824ed10537a974d502377aa92459d06ff6a5b6110bb8",
+    "first_answer": "aback",
+    "last_answer": "zonal",
+    "first_guess": "aahed",
+    "last_guess": "zymic",
+    "split_seed": 42,
+    "num_dev_targets": 463,
+    "num_test_targets": 1852,
+    "dev_targets_sha256": "85ca159c1b0aca03e367b5b6022257bcc775ac4f6ae2556f9a8d51e353b48b3c",
+    "test_targets_sha256": "c7674ad5469e61ad9d00e5f4b7fd66ec7094a15e73910edbcd90e591178bcff3"
+  }
+}
