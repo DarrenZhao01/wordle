@@ -1,7 +1,7 @@
-# Wordle Agent & Terminal Prototype: Weeks 1–4 Technical Write-Up
+# Wordle Agent & Terminal Prototype: Technical Write-Up
 
 ## Abstract
-We present the design, verification, and empirical evaluation of a Wordle game simulator and three progressive agent architectures covering Weeks 1–4 of the project roadmap: (1) a **Random-Consistent Baseline**, (2) a **Positional Letter-Frequency Baseline**, and (3) a **One-Step Information-Gain (Shannon Entropy) Solver**. All agents operate under strict separation from the hidden answer, starting every game with the full dictionary of $2,315$ possible solutions and updating their candidate state via precomputed ternary feedback patterns. Across all $2,315$ Wordle answers, the Random-Consistent baseline averages $4.0854 \pm 0.0173$ guesses ($98.15\%$ win rate), the Positional Letter-Frequency baseline averages $3.6397$ guesses ($99.40\%$ win rate, $14$ losses), a candidate-restricted Entropy variant averages $3.5983$ guesses ($99.52\%$ win rate, $11$ losses), and the full Information-Gain Entropy solver ($\varepsilon = 0.01$) achieves a **$100.00\%$ win rate** ($0$ losses across all $2,315$ targets) with an average of **$3.4713$ guesses** ($3.4644$ on the 20% development split and $3.4730$ on the held-out 80% test split) at $4.031\text{ ms}$ per guess.
+We present the design, verification, and empirical evaluation of a Wordle game simulator, three progressive agent architectures, and an interactive assistant covering Weeks 1–4 of the project roadmap plus the interactive CLI extension: (1) a **Random-Consistent Baseline**, (2) a **Positional Letter-Frequency Baseline**, and (3) a **One-Step Information-Gain (Shannon Entropy) Solver**. All agents operate under strict separation from the hidden answer, starting every game with the full dictionary of $2,315$ possible solutions and updating their candidate state via precomputed ternary feedback patterns. Across all $2,315$ Wordle answers, the Random-Consistent baseline averages $4.0854 \pm 0.0173$ guesses ($98.15\%$ win rate), the Positional Letter-Frequency baseline averages $3.6397$ guesses ($99.40\%$ win rate, $14$ losses), a candidate-restricted Entropy variant averages $3.5983$ guesses ($99.52\%$ win rate, $11$ losses), and the full Information-Gain Entropy solver ($\varepsilon = 0.01$) achieves a **$100.00\%$ win rate** ($0$ losses across all $2,315$ targets) with an average of **$3.4713$ guesses** ($3.4644$ on the 20% development split and $3.4730$ on the held-out 80% test split) at $4.031\text{ ms}$ per guess. Finally, we evaluate our interactive assistant on live New York Times Wordle gameplay (`KARAT`), demonstrating a two-tier candidate fallback ($2,315 \to 12,972$) that seamlessly handles NYT-curated answers outside Josh Wardle's original $2,315$-word list.
 
 ---
 
@@ -36,14 +36,14 @@ To avoid redundant string comparisons during gameplay and evaluation:
 - **Metadata Validation (`data/cache_meta.json`)**: Stores file/list SHA-256 digests, word counts, boundary words, array shapes/dtypes, and algorithm version tags. Cache loading automatically rejects mismatched metadata and regenerates cleanly.
 
 ### 1.4 Correctness & Property Testing (`tests/test_wordle.py`)
-All 10 test suites in `tests/test_wordle.py` pass in $0.39\text{ s}$, verifying:
+All 11 test suites in `tests/test_wordle.py` pass in $0.63\text{ s}$, verifying:
 1. Independently specified duplicate-letter edge cases (`ALLEY` vs. `APPLE` $\to$ `(G, Y, ., Y, .)`, `SPEED` vs. `STEAL`, `SPEED` vs. `ABIDE`, `SPEED` vs. `ERASE`, `EERIE` vs. `ELITE`).
 2. Bijective base-3 encoding/decoding across all $243$ patterns and the diagonal identity $M[w, w] = 242$.
 3. Agreement between the batched matrix, opening entropy cache, and scalar reference functions.
 4. Rejection of tampered cache metadata.
 5. Simulator dictionary enforcement and post-game termination errors.
 6. Monotonic candidate reduction ($1 \le |C_{t}| \le |C_{t-1}|$), survival of the true hidden target at every turn, immediate selection when $|C| = 1$, diagnostic `RuntimeError` when an impossible observation leaves $|C| = 0$, and clean state reset between games.
-7. Exact entropy and tie-breaking on small candidate sets (`FIGHT/LIGHT/MIGHT/SIGHT` where exploratory `FILMY` yields $2.0\text{ bits}$ vs. $0.8113\text{ bits}$ for `SIGHT`), final-turn restriction when `turns_remaining == 1`, and seed invariance across evaluation subsets.
+7. Exact entropy and tie-breaking on small candidate sets (`FIGHT/LIGHT/MIGHT/SIGHT` where exploratory `FILMY` yields $2.0\text{ bits}$ vs. $0.8113\text{ bits}$ for `SIGHT`), final-turn restriction when `turns_remaining == 1`, seed invariance across evaluation subsets, and interactive assistant recovery (including NYT expanded-dictionary fallback).
 
 ---
 
@@ -139,19 +139,40 @@ We report both the **Carried-Forward Mean** (where solved games carry forward $|
 
 ---
 
-## 4. Reproducing the Experiments via CLI (`main.py`)
+## 4. Interactive Assistant & Live NYT Wordle Case Study (`src/assistant.py`)
+
+### 4.1 Dual-Workflow Interactive Assistant
+The interactive terminal assistant (`python main.py assistant`) supports two workflows:
+1. **External Wordle Helper Mode (default)**: The user enters their guess (or presses `Enter` to accept the `#1` recommended guess) and the 5-position feedback received from an external Wordle game using flexible notation (`G`/`2` = Green, `Y`/`1` = Yellow, `.`/`B`/`X`/`0`/`-`/`_` = Gray).
+2. **Practice / Comparison Mode (`--target WORD` or `--random-target`)**: The simulator holds a hidden target word, automatically scores the user's guesses, and prints a compact comparison whenever the user's guess differs from the `#1` recommendation:
+   ```text
+   Comparison: Your guess CRANE (H = 5.743 bits, possible answer, 142 groups) vs #1 RAISE (H = 5.878 bits, possible answer, 132 groups)
+   ```
+
+### 4.2 Real-World Discovery: Two-Tier Candidate Fallback ($2,315 \to 12,972$) on `KARAT`
+During live testing on a New York Times Wordle puzzle with hidden answer `KARAT` and human guess sequence `CRANE` (`01100` / `.YY..`) $\to$ `TOILS` (`10000` / `Y....`) $\to$ `DUMPY` (`00000` / `.....`):
+- Turns 1 and 2 reduced the original $2,315$ candidate set $C$ to $3$ words: `PARTY, RATTY, WARTY` (all ending in `Y`).
+- Turn 3 (`DUMPY` $\to$ `.....`) eliminated `Y`, leaving **$0$ candidates in the original $2,315$ answer list**, because `KARAT` resides in the $10,657$ non-answer list (`wordle-allowed-guesses.txt`) that the New York Times editorial team now occasionally draws from.
+- To preserve the curated $2,315$ prior on standard games while supporting modern NYT puzzles, `src/assistant.py` maintains a parallel consistency filter over the full $12,972$ dictionary. When `DUMPY` (`00000`) eliminated the last $3$ words in the $2,315$ list, the assistant automatically transitioned to the $6$ consistent words in the $12,972$ dictionary (`ATTAR, GARTH, JARTA, KARAT, RABAT, RATHA`) and identified that $5$ of those candidates (including `KARAT` and `GARTH`) achieved the maximum possible entropy of $\log_2(6) = 2.585\text{ bits}$, solving the puzzle on Turn 4.
+
+---
+
+## 5. Reproducing the Experiments via CLI (`main.py`)
 
 ```powershell
-# 1. Run the unit and property test suite
+# 1. Run the 11 unit and property test suites
 .\.venv\Scripts\pytest.exe -v
 
-# 2. Simulate individual games in the terminal with ANSI board rendering and |C| tracking
+# 2. Launch the Interactive Wordle Assistant (External NYT Helper or Practice Mode)
+.\.venv\Scripts\python.exe main.py assistant
+.\.venv\Scripts\python.exe main.py assistant --target watch
+
+# 3. Simulate individual games in the terminal with ANSI board rendering and |C| tracking
 .\.venv\Scripts\python.exe main.py play --agent entropy --target watch,apple --epsilon 0.01
 
-# 3. Tune epsilon on the 20% Development Split (463 words)
+# 4. Tune epsilon on the 20% Development Split (463 words)
 .\.venv\Scripts\python.exe main.py tune
 
-# 4. Run the full benchmark suite across all 2,315 words and export JSON/JSONL logs
+# 5. Run the full benchmark suite across all 2,315 words and export JSON/JSONL logs
 .\.venv\Scripts\python.exe main.py evaluate
 ```
-

@@ -22,11 +22,15 @@ d:/Github/wordle/
 │   │   ├── random_agent.py               # Random-Consistent Baseline Agent (over C_idx)
 │   │   ├── frequency_agent.py            # Positional Letter-Frequency Baseline Agent (over C_idx)
 │   │   └── entropy_agent.py              # Information-Gain (Shannon Entropy) Solver
+│   ├── assistant.py                      # Interactive Assistant & 2,315 -> 12,972 NYT fallback
 │   └── evaluate.py                       # Reproducible benchmark runner, logs & split aggregation
 ├── tests/
-│   └── test_wordle.py                    # Correctness tests for feedback, cache, state & agents
+│   └── test_wordle.py                    # Correctness tests for feedback, cache, state & assistant
 ├── results/                              # Generated JSON summaries and per-game CSV/JSONL logs
-└── main.py                               # Unified CLI (`play`, `tune`, `evaluate`)
+├── PLAN.md                               # Implementation plan & locked-in specifications
+├── REPORT.md                             # Full technical write-up & experimental results
+├── ADR.md                                # Architecture Decision Records (ADR-001 through ADR-006)
+└── main.py                               # Unified CLI (`play`, `assistant`, `tune`, `evaluate`)
 ```
 
 ---
