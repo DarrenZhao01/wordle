@@ -340,3 +340,101 @@ def test_evaluation_seed_invariance_and_trajectory_conventions(dictionary, cache
         assert uc[str(t)] == 0
         assert uo[str(t)] is None
 
+
+def test_parse_feedback_string_and_interactive_assistant(dictionary, cache):
+    """Verify flexible feedback parsing, 0-candidate typo guard, undo, and practice mode."""
+    from src.assistant import run_interactive_assistant
+    from src.engine import format_pattern_ascii, parse_feedback_string
+
+    assert parse_feedback_string("GGGGG") == ALL_GREEN
+    assert parse_feedback_string("22222") == ALL_GREEN
+    assert parse_feedback_string(".....") == 0
+    assert parse_feedback_string("b x 0 - _") == 0
+    assert format_pattern_ascii(parse_feedback_string(".Y..G")) == ".Y..G"
+
+    with pytest.raises(ValueError, match="5 positions"):
+        parse_feedback_string("GGG")
+    with pytest.raises(ValueError, match="Invalid feedback symbol"):
+        parse_feedback_string("GGGZ.")
+
+    # 1. Test External Helper mode with:
+    #    - Turn 1: press Enter ('') to accept 'raise', enter '.Y..G' (41 candidates)
+    #    - Turn 2: type 'undo' -> reverts to Turn 1 (2,315 candidates)!
+    #    - Turn 1 again: accept 'raise', enter '.Y..G' (41 candidates)
+    #    - Turn 2: enter 'plant', test an impossible feedback ('GGGG.' leaves 0 in both 2,315 and 12,972!),
+    #      verify it gets rejected non-destructively, then enter 'YYY..' and solve 'apple'!
+    agent = EntropyAgent(dictionary, cache, epsilon=0.01)
+    inputs = iter(
+        [
+            "",        # Turn 1: accept #1 recommendation ('raise')
+            ".Y..G",   # Feedback for 'raise' vs 'apple' -> 41 candidates remain
+            "undo",    # Undo back to Turn 1 (2,315 candidates)
+            "",        # Turn 1 again: accept 'raise'
+            ".Y..G",   # Feedback '.Y..G' -> 41 candidates remain
+            "plant",   # Turn 2: enter 'plant'
+            "GGGYG",   # Mathematically impossible Wordle pattern (4 greens + 1 yellow -> 0 in 12,972!)
+            "YYY..",   # Valid feedback for 'plant' vs 'apple' -> 2 candidates ('ample', 'apple')
+            "apple",   # Turn 3: enter 'apple'
+            "GGGGG",   # Solved!
+        ]
+    )
+    outputs: list[str] = []
+    history = run_interactive_assistant(
+        agent=agent,
+        dictionary=dictionary,
+        cache=cache,
+        target=None,
+        input_fn=lambda prompt: next(inputs),
+        output_fn=outputs.append,
+    )
+    assert len(history) == 3
+    assert [g for g, _ in history] == ["raise", "plant", "apple"]
+    full_out = "\n".join(outputs)
+    assert "leaves 0 possible answers" in full_out
+    assert "Solved in 3/6 guesses!" in full_out
+
+    # 2. Test NYT expanded-dictionary answer ('karat', in 12,972 allowed_guesses but not original 2,315)
+    agent_karat = EntropyAgent(dictionary, cache, epsilon=0.01)
+    karat_inputs = iter(
+        [
+            "crane",
+            "01100",
+            "toils",
+            "10000",
+            "dumpy",
+            "00000",
+            "karat",
+            "22222",
+        ]
+    )
+    karat_outputs: list[str] = []
+    hist_karat = run_interactive_assistant(
+        agent=agent_karat,
+        dictionary=dictionary,
+        cache=cache,
+        target=None,
+        input_fn=lambda prompt: next(karat_inputs),
+        output_fn=karat_outputs.append,
+    )
+    assert [g for g, _ in hist_karat] == ["crane", "toils", "dumpy", "karat"]
+    karat_text = "\n".join(karat_outputs)
+    assert "ATTAR, GARTH, JARTA, KARAT, RABAT, RATHA" in karat_text
+    assert "Solved in 4/6 guesses! (KARAT)" in karat_text
+
+    # 2. Test Practice Mode (target='watch') with Enter shortcut + custom guess comparison
+    agent_practice = EntropyAgent(dictionary, cache, epsilon=0.01)
+    practice_inputs = iter(["crane", "", "", "", ""])
+    practice_outputs: list[str] = []
+    hist_practice = run_interactive_assistant(
+        agent=agent_practice,
+        dictionary=dictionary,
+        cache=cache,
+        target="watch",
+        input_fn=lambda prompt: next(practice_inputs),
+        output_fn=practice_outputs.append,
+    )
+    assert hist_practice[-1][0] == "watch"
+    assert hist_practice[-1][1] == ALL_GREEN
+    assert any("Comparison: Your guess CRANE" in line for line in practice_outputs)
+
+

@@ -9,6 +9,7 @@ import random
 from typing import Dict, List, Sequence
 
 from src.agents import BaseAgent, EntropyAgent, LetterFrequencyAgent, RandomConsistentAgent
+from src.assistant import run_interactive_assistant
 from src.dictionary import DEFAULT_DATA_DIR, WordleDictionary, load_dictionary
 from src.engine import format_guess_ansi, format_pattern_ascii
 from src.evaluate import (
@@ -330,6 +331,36 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
     print(f"\nSaved full benchmark summary to {summary_path}")
 
 
+def cmd_assistant(args: argparse.Namespace) -> None:
+    dictionary = load_dictionary(DEFAULT_DATA_DIR)
+    cache = load_or_build_cache(dictionary, DEFAULT_DATA_DIR, force_rebuild=args.rebuild_cache)
+
+    agent = _build_agent(
+        agent_key=args.agent,
+        dictionary=dictionary,
+        cache=cache,
+        epsilon=args.epsilon,
+        allow_non_answers=not args.candidates_only,
+        unique_letters_only=args.unique_letters,
+        seed=args.seed,
+    )
+
+    target = None
+    if args.target is not None:
+        target = args.target.strip().lower()
+    elif args.random_target:
+        rng = random.Random(args.seed)
+        target = rng.choice(dictionary.answers)
+
+    run_interactive_assistant(
+        agent=agent,
+        dictionary=dictionary,
+        cache=cache,
+        target=target,
+        max_candidates_preview=10,
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Wordle Agent & Simulator CLI Prototype (Weeks 1-4)"
@@ -465,6 +496,58 @@ def build_parser() -> argparse.ArgumentParser:
         help="Directory to write benchmark_summary.json and per-game JSONL logs",
     )
     p_eval.set_defaults(func=cmd_evaluate)
+
+    # assistant subcommand
+    p_asst = sub.add_parser(
+        "assistant",
+        help="Interactive Wordle assistant (External Helper or Practice Mode)",
+    )
+    p_asst.add_argument(
+        "--agent",
+        default="entropy",
+        choices=[
+            "entropy",
+            "entropy_candidates_only",
+            "frequency",
+            "frequency_unique",
+            "random",
+        ],
+        help="Agent policy used to recommend guesses (default: entropy)",
+    )
+    p_asst.add_argument(
+        "--epsilon",
+        type=float,
+        default=0.01,
+        help="Near-tie candidate preference bonus for EntropyAgent (default: 0.01)",
+    )
+    p_asst.add_argument(
+        "--candidates-only",
+        action="store_true",
+        help="Restrict EntropyAgent recommendations strictly to remaining candidates C_idx",
+    )
+    p_asst.add_argument(
+        "--unique-letters",
+        action="store_true",
+        help="Use duplicate-letter discount variant for LetterFrequencyAgent",
+    )
+    p_asst.add_argument(
+        "--target",
+        type=str,
+        default=None,
+        help="Practice Mode: specify a hidden target word for the simulator to auto-score",
+    )
+    p_asst.add_argument(
+        "--random-target",
+        action="store_true",
+        help="Practice Mode: pick a random hidden target word for the simulator to auto-score",
+    )
+    p_asst.add_argument(
+        "--seed",
+        type=int,
+        default=0,
+        help="Random seed when using --random-target or random agent",
+    )
+    p_asst.set_defaults(func=cmd_assistant)
 
     return parser
 

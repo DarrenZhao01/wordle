@@ -92,6 +92,42 @@ def format_pattern_ascii(pattern_id: int) -> str:
     return "".join(symbols[t] for t in decode_pattern(pattern_id))
 
 
+def parse_feedback_string(feedback_str: str) -> int:
+    """Parse a 5-character user feedback string into a pattern_id in [0, 242].
+
+    Accepted characters per position (case-insensitive, spaces ignored):
+      - Green (2):  'G', '2'
+      - Yellow (1): 'Y', '1'
+      - Gray (0):   '.', 'B', 'X', '0', '-', '_'
+    """
+    compact = "".join(ch for ch in feedback_str.strip().upper() if not ch.isspace())
+    if len(compact) != 5:
+        raise ValueError(
+            f"Feedback must have 5 positions (e.g. '.Y..G' or 'BYBBG'), got {feedback_str!r}"
+        )
+    char_map = {
+        "G": GREEN,
+        "2": GREEN,
+        "Y": YELLOW,
+        "1": YELLOW,
+        ".": GRAY,
+        "B": GRAY,
+        "X": GRAY,
+        "0": GRAY,
+        "-": GRAY,
+        "_": GRAY,
+    }
+    trits: List[int] = []
+    for pos, ch in enumerate(compact):
+        if ch not in char_map:
+            raise ValueError(
+                f"Invalid feedback symbol {ch!r} at position {pos + 1} in {feedback_str!r}. "
+                f"Use G/2=Green, Y/1=Yellow, ./B/X/0=Gray."
+            )
+        trits.append(char_map[ch])
+    return encode_trits(trits)
+
+
 def format_guess_ansi(guess: str, pattern_id: int) -> str:
     """Render a 5-letter guess with ANSI background colors matching its feedback pattern."""
     trits = decode_pattern(pattern_id)
