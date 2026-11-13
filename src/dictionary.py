@@ -16,6 +16,12 @@ DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 ANSWERS_FILENAME = "wordle-answers-alphabetical.txt"
 ALLOWED_FILENAME = "wordle-allowed-guesses.txt"
 SPLITS_FILENAME = "splits.json"
+
+MODERN_ANSWERS_FILENAME = "nyt-answers-alphabetical.txt"
+MODERN_ALLOWED_FILENAME = "nyt-allowed-guesses.txt"
+MODERN_SPLITS_FILENAME = "splits_modern.json"
+DEFAULT_EDITION = "modern"
+
 DEFAULT_SPLIT_SEED = 42
 DEFAULT_DEV_RATIO = 0.20
 SPLIT_SCHEMA_VERSION = "1.0"
@@ -57,6 +63,7 @@ class WordleDictionary:
     dev_set: Set[str]
     test_set: Set[str]
     split_seed: int
+    edition: str = DEFAULT_EDITION
 
     @property
     def num_answers(self) -> int:
@@ -68,6 +75,7 @@ class WordleDictionary:
 
     def metadata_dict(self) -> Dict[str, object]:
         return {
+            "edition": self.edition,
             "num_answers": self.num_answers,
             "num_guesses": self.num_guesses,
             "answers_file_sha256": self.answers_file_sha256,
@@ -154,11 +162,26 @@ def _load_or_create_splits(
 def load_dictionary(
     data_dir: Path = DEFAULT_DATA_DIR,
     split_seed: int = DEFAULT_SPLIT_SEED,
+    edition: str = DEFAULT_EDITION,
 ) -> WordleDictionary:
     """Load and validate the Wordle answer and allowed-guess dictionaries and target splits."""
-    answers_path = data_dir / ANSWERS_FILENAME
-    allowed_path = data_dir / ALLOWED_FILENAME
-    splits_path = data_dir / SPLITS_FILENAME
+    norm_edition = edition.strip().lower()
+    if norm_edition in ("modern", "nyt"):
+        norm_edition = "modern"
+        ans_fname = MODERN_ANSWERS_FILENAME
+        all_fname = MODERN_ALLOWED_FILENAME
+        spl_fname = MODERN_SPLITS_FILENAME
+    elif norm_edition in ("original", "orig", "classic"):
+        norm_edition = "original"
+        ans_fname = ANSWERS_FILENAME
+        all_fname = ALLOWED_FILENAME
+        spl_fname = SPLITS_FILENAME
+    else:
+        raise ValueError(f"Unknown dictionary edition {edition!r}; expected 'modern' or 'original'")
+
+    answers_path = data_dir / ans_fname
+    allowed_path = data_dir / all_fname
+    splits_path = data_dir / spl_fname
 
     if not answers_path.exists():
         raise FileNotFoundError(f"Missing answers file: {answers_path}")
@@ -172,10 +195,10 @@ def load_dictionary(
     allowed_file_sha256 = _sha256_bytes(all_bytes)
 
     answers = _validate_words(
-        ans_bytes.decode("utf-8").splitlines(), ANSWERS_FILENAME
+        ans_bytes.decode("utf-8").splitlines(), ans_fname
     )
     non_answers = _validate_words(
-        all_bytes.decode("utf-8").splitlines(), ALLOWED_FILENAME
+        all_bytes.decode("utf-8").splitlines(), all_fname
     )
     allowed_guesses = sorted(set(answers) | set(non_answers))
 
@@ -218,5 +241,6 @@ def load_dictionary(
         dev_set=set(dev_targets),
         test_set=set(test_targets),
         split_seed=split_seed,
+        edition=norm_edition,
     )
 

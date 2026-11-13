@@ -11,6 +11,7 @@
     12972
   ],
   "opening_entropies_dtype": "float64",
+  "edition": "original",
   "num_answers": 2315,
   "num_guesses": 12972,
   "answers_file_sha256": "5209b35f823f8b80f0404f863bd80df06d6a966c6eb1016d69f38badc6eed5d0",
@@ -26,5 +27,5 @@
   "num_test_targets": 1852,
   "dev_targets_sha256": "85ca159c1b0aca03e367b5b6022257bcc775ac4f6ae2556f9a8d51e353b48b3c",
   "test_targets_sha256": "c7674ad5469e61ad9d00e5f4b7fd66ec7094a15e73910edbcd90e591178bcff3",
-  "build_time_ms": 6252.77
+  "build_time_ms": 6074.22
 }

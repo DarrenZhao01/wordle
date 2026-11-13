@@ -1,0 +1,31 @@
+{
+  "cache_schema_version": "1.0",
+  "encoding_version": "base3_lsb_pos0_v1",
+  "entropy_version": "shannon_base2_lut_float64_v1",
+  "pattern_matrix_shape": [
+    14855,
+    3158
+  ],
+  "pattern_matrix_dtype": "uint8",
+  "opening_entropies_shape": [
+    14855
+  ],
+  "opening_entropies_dtype": "float64",
+  "edition": "modern",
+  "num_answers": 3158,
+  "num_guesses": 14855,
+  "answers_file_sha256": "850555a3879710cced7af3bd8efb36aee23917f20f2d7f7e84ae90f1333369cb",
+  "allowed_file_sha256": "ecf2a06d2f35878be08ea0f688ec390aa26e76b6eebe0cf95229c7d19846225c",
+  "answers_list_sha256": "761b933d6047bfcc0d529baf8c0be03df788d69b4acfdd78ed020f65aa47d3fc",
+  "guesses_list_sha256": "a7898cd20f36686d4c5b43ece226c36eb41a701df36da35bd18e21af41cfead4",
+  "first_answer": "aback",
+  "last_answer": "zowie",
+  "first_guess": "aahed",
+  "last_guess": "zymic",
+  "split_seed": 42,
+  "num_dev_targets": 632,
+  "num_test_targets": 2526,
+  "dev_targets_sha256": "0d4a65cab0fba0386b0b3474ed4034846b5ba3731662e597911657253d11d7b2",
+  "test_targets_sha256": "f1a710432abb59c861d56c3aaed53df4f069258bae8ea775cf4341e69428217e",
+  "build_time_ms": 10678.61
+}

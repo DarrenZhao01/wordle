@@ -94,20 +94,20 @@ This document records the core architectural, algorithmic, and experimental desi
 
 ---
 
-## ADR-006: Two-Tier Candidate Pool Fallback ($2,315 \to 12,972$) in the Interactive Assistant
+## ADR-006: Curated Modern NYT Dictionary (3,158 / 14,855) as Default with `--original` Flag and Fallback
 
 - **Status**: Accepted
 - **Context**:
-  - While Josh Wardle's original Wordle used the $2,315$-word solution list (`wordle-answers-alphabetical.txt`), the New York Times editorial team now occasionally selects daily Wordle answers from the broader $12,972$ allowed-guess dictionary (e.g., `KARAT`, `BALSA`, `GUANO`, `KAZOO`, `LASER`, `PANKO`, `SNAFU`).
-  - During live testing on NYT Wordle (`KARAT`) with guesses `CRANE` (`01100`) $\to$ `TOILS` (`10000`) $\to$ `DUMPY` (`00000`), the first two guesses reduced the $2,315$ list to `PARTY, RATTY, WARTY`, and `DUMPY` (`00000`) eliminated all three—triggering a false `0 possible answers` warning even though `KARAT` (and 5 other words in the $12,972$ dictionary) matched all feedback.
+  - While Josh Wardle's original 2021 Wordle used a static $2,315$-word solution list (`wordle-answers-alphabetical.txt`), the New York Times editorial team and NYT WordleBot expanded the eligible solution pool to $3,158$ curated words (`nyt-answers-alphabetical.txt`, paired with $14,855$ total allowed guesses in `nyt-allowed-guesses.txt`), adding familiar words such as `KARAT`, `BALSA`, `GUANO`, `KAZOO`, `LASER`, `PANKO`, and `SNAFU` while still excluding regular `-S` plurals and ~11,700 obscure Scrabble words.
+  - Relying solely on reactive fallback ($2,315 \to 12,972$ when $|C| = 0$) degrades performance on newly added NYT answers in two ways before fallback triggers:
+    1. **Blind-spot entropy optimization**: While $|C_{2315}| > 0$, the solver assigns zero probability to `KARAT` (e.g., seeing only `PARTY, RATTY, WARTY` after `CRANE` and `TOILS`).
+    2. **False sole-survivor trap**: If $1$ word survives in the $2,315$ list while the true answer is `KARAT`, the $|C| = 1$ immediate-win rule wastes a full turn guessing the false sole survivor before discovering $|C| = 0$.
+  - Conversely, treating all $12,972$ (or $14,855$) allowed words as uniform candidate answers from Turn 1 inflates initial uncertainty by $+2.48\text{ bits}$ and wastes turns disambiguating `-S` plurals and obscure Scrabble words (`YARTA`, `RYBAT`).
 - **Decision**:
-  - In `src/assistant.py`, maintain both the primary candidate set `agent.c_idx` ($\subseteq 2,315$ answers) and a parallel consistency filter `expanded_pool` ($\subseteq 12,972$ allowed words).
-  - Keep the $2,315$ candidate set as the primary pool so standard Wordle games benefit from the curated answer prior (avoiding obscure Scrabble words on early turns).
-  - If a user-entered feedback pattern leaves `0` matches in the $2,315$ list **but $>0$ matches in `expanded_pool`**, notify the user and automatically transition the session to `expanded_pool` (computing exact entropies and candidate memberships over the matching words from the $12,972$ dictionary).
-  - Reject feedback as a user typo only when `0` words match in **both** the $2,315$ list and the full $12,972$ dictionary, and preserve full `undo` support across tier transitions.
-- **Alternatives Considered**:
-  - *Treating all $12,972$ words as equally likely answers from Turn 1*: Degrades recommendation quality on 99%+ of games by treating obscure plurals and rare words (`AAHED`, `ZYMIC`) as equally likely solutions from the start.
-  - *Hard-failing when the $2,315$ list hits $0$*: Leaves the user stranded whenever NYT Wordle picks an expanded-dictionary word like `KARAT`.
-- **Consequences**:
-  - Preserves optimal $3.47$-guess performance on standard solutions while seamlessly handling NYT expanded-dictionary puzzles like `KARAT` without false error blocks.
+  1. Adopt the **Curated Modern NYT WordleBot Dictionary** ($3,158$ answers / $14,855$ allowed guesses) as the default dictionary edition (`edition = "modern"`), with separate hash-validated cache files (`pattern_matrix_modern.npy`, `opening_entropies_modern.npy`, `cache_meta_modern.json`, `splits_modern.json`).
+  2. Provide the `--original` CLI flag (and `--dictionary {modern,original}`) across all commands (`play`, `assistant`, `tune`, `evaluate`) to run the original 2021 lists ($2,315$ answers / $12,972$ guesses) for direct comparison with classic published results.
+  3. Retain the secondary expanded-dictionary fallback inside `src/assistant.py` as a safety net whenever `--original` is used or if an external puzzle ever uses a word outside the active answer list.
+- **Consequences & Empirical Validation**:
+  - On the $3,158$-word Modern NYT benchmark, the full Entropy Agent ($\varepsilon = 0.01$, opener `tarse`) achieves a **$100.00\%$ win rate** ($0$ losses across all $3,158$ answers) and an average of **$3.5678$ guesses** ($3.5839$ on Dev, $3.5637$ on Test), increasing by only $+0.0965$ guesses compared to the smaller $2,315$-word original set ($3.4713$) while natively including modern NYT answers like `KARAT` from Turn 1.
+  - In `python main.py assistant` on the `KARAT` game (`CRANE` $\to$ `TOILS` $\to$ `DUMPY` $\to$ `KARAT`), `CRANE` and `TOILS` narrow $|C|$ directly to the $4$ words `KARAT, PARTY, RATTY, WARTY`, and `DUMPY` narrows $|C|$ to `1: KARAT` natively without needing fallback.
 

@@ -34,12 +34,22 @@ from src.precompute import (
 
 @pytest.fixture(scope="session")
 def dictionary():
-    return load_dictionary(DEFAULT_DATA_DIR)
+    return load_dictionary(DEFAULT_DATA_DIR, edition="original")
 
 
 @pytest.fixture(scope="session")
 def cache(dictionary):
     return load_or_build_cache(dictionary, DEFAULT_DATA_DIR)
+
+
+@pytest.fixture(scope="session")
+def modern_dictionary():
+    return load_dictionary(DEFAULT_DATA_DIR)  # default edition="modern"
+
+
+@pytest.fixture(scope="session")
+def modern_cache(modern_dictionary):
+    return load_or_build_cache(modern_dictionary, DEFAULT_DATA_DIR)
 
 
 def test_duplicate_letter_feedback_examples():
@@ -436,5 +446,47 @@ def test_parse_feedback_string_and_interactive_assistant(dictionary, cache):
     assert hist_practice[-1][0] == "watch"
     assert hist_practice[-1][1] == ALL_GREEN
     assert any("Comparison: Your guess CRANE" in line for line in practice_outputs)
+
+
+def test_modern_nyt_dictionary_and_karat_native(modern_dictionary, modern_cache):
+    """Verify default Modern NYT dictionary (3,158 answers / 14,855 guesses) includes KARAT natively."""
+    assert modern_dictionary.edition == "modern"
+    assert modern_dictionary.num_answers == 3158
+    assert modern_dictionary.num_guesses == 14855
+    assert len(modern_dictionary.dev_targets) == 632
+    assert len(modern_dictionary.test_targets) == 2526
+    assert "karat" in modern_dictionary.answer_to_idx
+
+    # In the Modern NYT dictionary, KARAT is in the primary answer pool C from Turn 1!
+    from src.assistant import run_interactive_assistant
+
+    agent = EntropyAgent(modern_dictionary, modern_cache, epsilon=0.01)
+    karat_inputs = iter(
+        [
+            "crane",
+            "01100",
+            "toils",
+            "10000",
+            "dumpy",
+            "00000",
+            "karat",
+            "22222",
+        ]
+    )
+    karat_outputs: list[str] = []
+    hist = run_interactive_assistant(
+        agent=agent,
+        dictionary=modern_dictionary,
+        cache=modern_cache,
+        target=None,
+        input_fn=lambda prompt: next(karat_inputs),
+        output_fn=karat_outputs.append,
+    )
+    assert [g for g, _ in hist] == ["crane", "toils", "dumpy", "karat"]
+    text = "\n".join(karat_outputs)
+    # No fallback needed because KARAT is natively in the 3,158 answer dictionary!
+    assert "0 words remain in the original" not in text
+    assert "Solved in 4/6 guesses! (KARAT)" in text
+
 
 

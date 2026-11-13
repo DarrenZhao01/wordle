@@ -91,15 +91,22 @@ def _print_game_record(record: GameRecord, dictionary: WordleDictionary, cache: 
     print("-" * 74)
 
 
+def _resolve_edition(args: argparse.Namespace) -> str:
+    if getattr(args, "original", False):
+        return "original"
+    return getattr(args, "dictionary", "modern")
+
+
 def cmd_play(args: argparse.Namespace) -> None:
-    dictionary = load_dictionary(DEFAULT_DATA_DIR)
+    edition = _resolve_edition(args)
+    dictionary = load_dictionary(DEFAULT_DATA_DIR, edition=edition)
     cache = load_or_build_cache(dictionary, DEFAULT_DATA_DIR, force_rebuild=args.rebuild_cache)
     allowed_set = set(dictionary.allowed_guesses)
 
     CacheStatus = "disk cache" if cache.loaded_from_disk else "freshly built"
     print(
-        f"Loaded {dictionary.num_answers} answers & {dictionary.num_guesses} allowed guesses "
-        f"({CacheStatus} in {cache.load_or_build_time_ms:.1f} ms)."
+        f"Loaded [{dictionary.edition}] {dictionary.num_answers} answers & "
+        f"{dictionary.num_guesses} allowed guesses ({CacheStatus} in {cache.load_or_build_time_ms:.1f} ms)."
     )
 
     agent = _build_agent(
@@ -116,7 +123,9 @@ def cmd_play(args: argparse.Namespace) -> None:
         targets = [t.strip().lower() for t in args.target.split(",") if t.strip()]
         for t in targets:
             if t not in dictionary.answer_to_idx:
-                raise ValueError(f"Target word {t!r} is not in the 2,315 answer dictionary")
+                raise ValueError(
+                    f"Target word {t!r} is not in the {dictionary.num_answers} ({dictionary.edition}) answer dictionary"
+                )
     else:
         if args.split == "dev":
             pool = list(dictionary.dev_targets)
@@ -157,12 +166,13 @@ def cmd_play(args: argparse.Namespace) -> None:
 
 
 def cmd_tune(args: argparse.Namespace) -> None:
-    dictionary = load_dictionary(DEFAULT_DATA_DIR)
+    edition = _resolve_edition(args)
+    dictionary = load_dictionary(DEFAULT_DATA_DIR, edition=edition)
     cache = load_or_build_cache(dictionary, DEFAULT_DATA_DIR, force_rebuild=args.rebuild_cache)
 
     epsilons = [float(x) for x in args.epsilons.split(",")]
     print(
-        f"Tuning epsilon on 20% Development Split ({len(dictionary.dev_targets)} targets, "
+        f"Tuning epsilon on [{dictionary.edition}] 20% Development Split ({len(dictionary.dev_targets)} targets, "
         f"each initialized with all {dictionary.num_answers} candidate answers)..."
     )
 
@@ -192,7 +202,10 @@ def cmd_tune(args: argparse.Namespace) -> None:
     print("=" * 88)
     print(f"Selected Best Epsilon on Dev Split: epsilon* = {result['best_epsilon']}")
 
-    out_path = Path(args.output)
+    default_tune_name = (
+        "tuning_dev.json" if dictionary.edition == "original" else f"tuning_dev_{dictionary.edition}.json"
+    )
+    out_path = Path(args.output) if args.output else (DEFAULT_RESULTS_DIR / default_tune_name)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(f"Saved tuning results to {out_path}")
@@ -255,7 +268,8 @@ def _print_split_comparison_table(
 
 
 def cmd_evaluate(args: argparse.Namespace) -> None:
-    dictionary = load_dictionary(DEFAULT_DATA_DIR)
+    edition = _resolve_edition(args)
+    dictionary = load_dictionary(DEFAULT_DATA_DIR, edition=edition)
     cache = load_or_build_cache(dictionary, DEFAULT_DATA_DIR, force_rebuild=args.rebuild_cache)
 
     targets = list(dictionary.answers)
@@ -263,7 +277,10 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
         targets = targets[: args.limit]
 
     epsilon = args.epsilon
-    tuning_path = DEFAULT_RESULTS_DIR / "tuning_dev.json"
+    tune_fname = (
+        "tuning_dev.json" if dictionary.edition == "original" else f"tuning_dev_{dictionary.edition}.json"
+    )
+    tuning_path = DEFAULT_RESULTS_DIR / tune_fname
     if epsilon is None:
         if tuning_path.exists():
             try:
@@ -279,11 +296,15 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
     results_by_agent: Dict[str, Dict[str, Dict[str, object]]] = {}
     results_dir = Path(args.output_dir)
     results_dir.mkdir(parents=True, exist_ok=True)
+    log_suffix = "" if dictionary.edition == "original" else f"_{dictionary.edition}"
 
     for key in agent_keys:
         if key in ("random", "random_consistent"):
             seeds = list(range(args.num_seeds))
-            print(f"Evaluating RandomConsistentAgent across {len(seeds)} seeds on {len(targets)} targets...")
+            print(
+                f"Evaluating RandomConsistentAgent [{dictionary.edition}] across {len(seeds)} seeds "
+                f"on {len(targets)} targets..."
+            )
             summaries, records = evaluate_random_baseline_multi_seed(
                 dictionary=dictionary,
                 cache=cache,
@@ -292,7 +313,9 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
             )
             results_by_agent["random_consistent"] = summaries
             if args.save_logs:
-                save_game_records_jsonl(records, results_dir / "game_logs_random_consistent.jsonl")
+                save_game_records_jsonl(
+                    records, results_dir / f"game_logs{log_suffix}_random_consistent.jsonl"
+                )
         else:
             agent = _build_agent(
                 agent_key=key,
@@ -300,7 +323,10 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
                 cache=cache,
                 epsilon=epsilon,
             )
-            print(f"Evaluating {agent.name} (config={agent.config_dict()}) on {len(targets)} targets...")
+            print(
+                f"Evaluating {agent.name} [{dictionary.edition}] (config={agent.config_dict()}) "
+                f"on {len(targets)} targets..."
+            )
             summaries, records = evaluate_deterministic_agent(
                 agent=agent,
                 dictionary=dictionary,
@@ -309,7 +335,9 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
             )
             results_by_agent[agent.name] = summaries
             if args.save_logs:
-                save_game_records_jsonl(records, results_dir / f"game_logs_{agent.name}.jsonl")
+                save_game_records_jsonl(
+                    records, results_dir / f"game_logs{log_suffix}_{agent.name}.jsonl"
+                )
 
     for split_key in ("dev", "test", "all"):
         split_list = [
@@ -317,7 +345,7 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
             for agent_dict in results_by_agent.values()
             if split_key in agent_dict
         ]
-        _print_split_comparison_table(split_key, split_list)
+        _print_split_comparison_table(f"{dictionary.edition}:{split_key}", split_list)
 
     full_payload = {
         "dictionary_metadata": dictionary.metadata_dict(),
@@ -326,13 +354,19 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
         "num_targets_evaluated": len(targets),
         "agents": results_by_agent,
     }
-    summary_path = results_dir / "benchmark_summary.json"
+    summary_fname = (
+        "benchmark_summary.json"
+        if dictionary.edition == "original"
+        else f"benchmark_summary_{dictionary.edition}.json"
+    )
+    summary_path = results_dir / summary_fname
     summary_path.write_text(json.dumps(full_payload, indent=2), encoding="utf-8")
     print(f"\nSaved full benchmark summary to {summary_path}")
 
 
 def cmd_assistant(args: argparse.Namespace) -> None:
-    dictionary = load_dictionary(DEFAULT_DATA_DIR)
+    edition = _resolve_edition(args)
+    dictionary = load_dictionary(DEFAULT_DATA_DIR, edition=edition)
     cache = load_or_build_cache(dictionary, DEFAULT_DATA_DIR, force_rebuild=args.rebuild_cache)
 
     agent = _build_agent(
@@ -361,6 +395,20 @@ def cmd_assistant(args: argparse.Namespace) -> None:
     )
 
 
+def _add_dictionary_args(p: argparse.ArgumentParser) -> None:
+    p.add_argument(
+        "--original",
+        action="store_true",
+        help="Use the original 2021 Wordle dictionary (2,315 answers / 12,972 guesses) instead of default Modern NYT (3,158 / 14,855)",
+    )
+    p.add_argument(
+        "--dictionary",
+        choices=["modern", "original"],
+        default="modern",
+        help="Dictionary edition to use (default: modern)",
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Wordle Agent & Simulator CLI Prototype (Weeks 1-4)"
@@ -370,10 +418,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Force regeneration of pattern_matrix.npy and opening_entropies.npy",
     )
+    _add_dictionary_args(parser)
     sub = parser.add_subparsers(dest="command", required=True)
 
     # play subcommand
     p_play = sub.add_parser("play", help="Simulate one or more Wordle games in the terminal")
+    _add_dictionary_args(p_play)
     p_play.add_argument(
         "--agent",
         default="entropy",
@@ -434,7 +484,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_play.set_defaults(func=cmd_play)
 
     # tune subcommand
-    p_tune = sub.add_parser("tune", help="Tune EntropyAgent epsilon on the 20% dev split (463 words)")
+    p_tune = sub.add_parser("tune", help="Tune EntropyAgent epsilon on the 20% dev split")
+    _add_dictionary_args(p_tune)
     p_tune.add_argument(
         "--epsilons",
         type=str,
@@ -449,8 +500,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_tune.add_argument(
         "--output",
         type=str,
-        default=str(DEFAULT_RESULTS_DIR / "tuning_dev.json"),
-        help="Output JSON path for dev tuning results",
+        default=None,
+        help="Output JSON path for dev tuning results (defaults to tuning_dev_modern.json or tuning_dev.json)",
     )
     p_tune.set_defaults(func=cmd_tune)
 
@@ -459,6 +510,7 @@ def build_parser() -> argparse.ArgumentParser:
         "evaluate",
         help="Run benchmark evaluation and report dev, test, and all-word summaries",
     )
+    _add_dictionary_args(p_eval)
     p_eval.add_argument(
         "--agents",
         type=str,
@@ -502,6 +554,7 @@ def build_parser() -> argparse.ArgumentParser:
         "assistant",
         help="Interactive Wordle assistant (External Helper or Practice Mode)",
     )
+    _add_dictionary_args(p_asst)
     p_asst.add_argument(
         "--agent",
         default="entropy",

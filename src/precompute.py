@@ -201,6 +201,23 @@ def is_cache_valid(
     return True, stored_meta
 
 
+def cache_paths_for_edition(
+    data_dir: Path, edition: str = "modern"
+) -> Tuple[Path, Path, Path]:
+    """Return (meta_path, matrix_path, entropies_path) for the given dictionary edition."""
+    if edition == "original":
+        return (
+            data_dir / CACHE_META_FILENAME,
+            data_dir / PATTERN_MATRIX_FILENAME,
+            data_dir / OPENING_ENTROPIES_FILENAME,
+        )
+    return (
+        data_dir / f"cache_meta_{edition}.json",
+        data_dir / f"pattern_matrix_{edition}.npy",
+        data_dir / f"opening_entropies_{edition}.npy",
+    )
+
+
 def load_or_build_cache(
     dictionary: WordleDictionary,
     data_dir: Path = DEFAULT_DATA_DIR,
@@ -211,9 +228,9 @@ def load_or_build_cache(
     t0 = time.perf_counter()
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    meta_path = data_dir / CACHE_META_FILENAME
-    matrix_path = data_dir / PATTERN_MATRIX_FILENAME
-    entropies_path = data_dir / OPENING_ENTROPIES_FILENAME
+    meta_path, matrix_path, entropies_path = cache_paths_for_edition(
+        data_dir, dictionary.edition
+    )
 
     if not force_rebuild:
         valid, stored_meta = is_cache_valid(dictionary, meta_path, matrix_path, entropies_path)
